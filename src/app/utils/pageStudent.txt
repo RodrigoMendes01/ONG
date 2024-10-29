@@ -1,0 +1,1611 @@
+import { Dialog, Transition } from '@headlessui/react'
+import {
+  AcademicCapIcon,
+  ClipboardDocumentListIcon,
+  DocumentTextIcon,
+  ExclamationTriangleIcon,
+  InformationCircleIcon,
+  PencilIcon,
+  TrashIcon,
+  UserPlusIcon,
+} from '@heroicons/react/24/outline'
+import { UserCircleIcon, UserIcon } from '@heroicons/react/24/solid'
+
+import { Fragment, useRef } from 'react'
+
+import { Format } from '@app/utils/format'
+
+import { Input } from '@views/components/input'
+
+import { useAuth } from '@app/hooks/use-auth'
+
+import { cn } from '@app/utils/cn'
+import { Filter } from '@views/components/filter'
+import { InputPhone } from '@views/components/input-phone'
+import { Select } from '@views/components/select'
+import { SimpleButton } from '@views/components/simple-button'
+import { useAthleteController } from '@views/pages/private/athlete/use-athlete-controller'
+import {
+  gradeLevelOptions,
+  periodOptions,
+  quantityPerModality,
+  responsibleRelationshipOptions,
+  schoolsOptions,
+  shirtsAndShortsOptions,
+  sportsOptions,
+} from '@views/pages/public/data/enrollment'
+import { Controller } from 'react-hook-form'
+import { InputCheckbox } from '@views/components/input-checkbox'
+
+export function Athletes() {
+  const { user } = useAuth()
+
+  const {
+    openEdit,
+    openDelete,
+    editItem,
+    control,
+    deleteItem,
+    athletes,
+    loading,
+    openBaseProfile,
+    openSchoolProfile,
+    openPersonalProfile,
+    editErrors,
+    schoolProfileControl,
+    personalProfileErrors,
+    schoolProfileErrors,
+    baseProfileErrors,
+    personalProfileControl,
+    baseProfileRegister,
+    schoolProfileRegister,
+    schoolProfileWatch,
+    personalProfileRegister,
+    handleEditPersonalProfile,
+    handleEditSchoolProfile,
+    handleEditBaseProfile,
+    handleEdit,
+    editRegister,
+    handleBaseProfile,
+    handleSchoolProfile,
+    handlePersonalProfile,
+    setOpenEdit,
+    setOpenDelete,
+    setEditItem,
+    setDeleteItem,
+    handleSubmitDelete,
+    open,
+    isOpen,
+    selectedTypeFilters,
+    handleTypeChange,
+    setOpen,
+    setIsOpen,
+    school,
+    setSchool,
+    neighborhood,
+    setNeighborhood,
+    desiredType,
+    setDesiredType,
+    desiredModality,
+    setDesiredModality,
+    loadAthletes,
+    items,
+    newModality,
+    setNewModality,
+  } = useAthleteController()
+
+  const cancelButtonRef = useRef(null)
+
+  const isStudent = schoolProfileWatch('school')
+  const disabledSelect =
+    isStudent === 'NAO_SOU_ALUNO' ||
+    isStudent === 'CHECKING' ||
+    isStudent === undefined
+
+  return (
+    <div>
+      {selectedTypeFilters === 'ATHLETE' && (
+        <Transition.Root show={open} as={Fragment}>
+          <Dialog as="div" className="relative z-10" onClose={setOpen}>
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0"
+              enterTo="opacity-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+            </Transition.Child>
+
+            <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+              <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <Transition.Child
+                  as={Fragment}
+                  enter="ease-out duration-300"
+                  enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                  enterTo="opacity-100 translate-y-0 sm:scale-100"
+                  leave="ease-in duration-200"
+                  leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+                  leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                >
+                  <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+                    <div>
+                      <div className="mt-3 text-center sm:mt-5">
+                        <Dialog.Title
+                          as="h3"
+                          className="text-base font-semibold leading-6 text-gray-900"
+                        >
+                          Filtrar atleta
+                        </Dialog.Title>
+                        <div className="text-left">
+                          <Input
+                            label="Escola:"
+                            placeholder="Digite a Escola"
+                            className="mb-1 text-left"
+                            name="school"
+                            value={school}
+                            onChange={(e) => setSchool(e.target.value)}
+                          />
+
+                          <Input
+                            label="Bairro:"
+                            placeholder="Digite o Bairro"
+                            className="mb-7"
+                            name="neighborhood"
+                            value={neighborhood}
+                            onChange={(e) => setNeighborhood(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-4">
+                      <button
+                        className="bg-light w-full justify-center rounded-md border border-red-300 px-3 py-2 text-sm font-semibold text-red-500 shadow-sm hover:bg-red-50"
+                        onClick={() => setOpen(false)}
+                      >
+                        Fechar
+                      </button>
+
+                      <SimpleButton
+                        type="button"
+                        onClick={() => {
+                          loadAthletes()
+                          setOpen(false)
+                        }}
+                        className="inline-flex w-full justify-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 sm:col-start-2"
+                      >
+                        Pesquisar
+                      </SimpleButton>
+                    </div>
+                  </Dialog.Panel>
+                </Transition.Child>
+              </div>
+            </div>
+          </Dialog>
+        </Transition.Root>
+      )}
+
+      {selectedTypeFilters === 'CATEGORY' && (
+        <Transition.Root show={open} as={Fragment}>
+          <Dialog as="div" className="relative z-10" onClose={setOpen}>
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0"
+              enterTo="opacity-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+            </Transition.Child>
+
+            <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+              <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <Transition.Child
+                  as={Fragment}
+                  enter="ease-out duration-300"
+                  enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                  enterTo="opacity-100 translate-y-0 sm:scale-100"
+                  leave="ease-in duration-200"
+                  leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+                  leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                >
+                  <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+                    <div>
+                      <div className="mt-3 text-center sm:mt-5">
+                        <Dialog.Title
+                          as="h3"
+                          className="mb-5 text-base font-semibold leading-6 text-gray-900"
+                        >
+                          Filtrar por modalidade
+                        </Dialog.Title>
+                        <div>
+                          <Select
+                            placeholder="Quantidade:"
+                            value={desiredType}
+                            onChange={(option) =>
+                              setDesiredType(option.valueOf())
+                            }
+                            options={quantityPerModality}
+                          />
+
+                          <div className="my-3" />
+
+                          {desiredType === 'ATLETA' && (
+                            <Select
+                              placeholder="Tamanho ou modalidade:"
+                              value={desiredModality}
+                              onChange={(option) =>
+                                setDesiredModality(option.valueOf())
+                              }
+                              className="mb-7"
+                              options={sportsOptions}
+                            />
+                          )}
+
+                          <div className="my-3" />
+
+                          {(desiredType === 'SHORTS' ||
+                            desiredType === 'CAMISAS') && (
+                            <>
+                              <Select
+                                placeholder="Modalidade:"
+                                value={newModality}
+                                onChange={(option) =>
+                                  setNewModality(option.valueOf())
+                                }
+                                options={sportsOptions}
+                              />
+
+                              <div className="my-3" />
+
+                              <Select
+                                placeholder="Tipo:"
+                                onChange={(option) =>
+                                  setDesiredModality(option.valueOf())
+                                }
+                                value={desiredModality}
+                                options={shirtsAndShortsOptions}
+                              />
+                              <div className="mb-8" />
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-4">
+                      <button
+                        className="bg-light w-full justify-center rounded-md border border-red-300 px-3 py-2 text-sm font-semibold text-red-500 shadow-sm hover:bg-red-50"
+                        onClick={() => setOpen(false)}
+                      >
+                        Fechar
+                      </button>
+
+                      <SimpleButton
+                        type="submit"
+                        onClick={() => {
+                          loadAthletes()
+                          setOpen(false)
+                        }}
+                        className="inline-flex w-full justify-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600 sm:col-start-2"
+                      >
+                        Pesquisar
+                      </SimpleButton>
+                    </div>
+                  </Dialog.Panel>
+                </Transition.Child>
+              </div>
+            </div>
+          </Dialog>
+        </Transition.Root>
+      )}
+
+      <div className="flex justify-between">
+        <div className="flex items-center">
+          <h1 className="text-base font-semibold leading-6 text-gray-900">
+            Atletas
+          </h1>
+
+          <Filter
+            id="athletes-filter"
+            type="radio"
+            isOpen={isOpen}
+            setIsOpen={setIsOpen}
+            options={[
+              { value: 'freq-plus', label: 'Maior frequência' },
+              { value: 'freq-minus', label: 'Menor frequência' },
+              { value: 'CATEGORY', label: 'Modalidades' },
+              { value: 'ATHLETE', label: 'Atletas' },
+            ]}
+            setFilter={handleTypeChange}
+          />
+        </div>
+        {selectedTypeFilters === 'CATEGORY' && (
+          <>
+            {desiredType === 'ATLETA' && (
+              <p className="w-max rounded border border-green-400 bg-green-50 px-3 py-1.5 text-right font-semibold text-zinc-700 shadow">
+                Você tem o total de {items} {desiredType.toLowerCase()} pela
+                modalidade {desiredModality.toLowerCase()}.
+              </p>
+            )}
+            {desiredType !== 'ATLETA' && (
+              <p className="w-max rounded border border-green-400 bg-green-50 px-3 py-1.5 text-right font-semibold text-zinc-700 shadow">
+                Você tem o total de {items} {desiredType.toLowerCase()} do
+                tamanho {desiredModality}.
+              </p>
+            )}
+          </>
+        )}
+      </div>
+
+      <div className="mx-4 mt-8 flow-root sm:mx-0">
+        <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+          <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+            <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
+              <table className="min-w-full divide-y divide-gray-300">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th
+                      scope="col"
+                      className="w-[20%] py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6"
+                    >
+                      Nome e matrícula
+                    </th>
+
+                    <th
+                      scope="col"
+                      className="w-[15%] px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                    >
+                      Identificação
+                    </th>
+
+                    <th
+                      scope="col"
+                      className="w-max px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                    >
+                      Perfil básico
+                    </th>
+
+                    <th
+                      scope="col"
+                      className="w-max px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                    >
+                      Perfil escolar
+                    </th>
+
+                    <th
+                      scope="col"
+                      className="w-max px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                    >
+                      Dados pessoais
+                    </th>
+
+                    <th
+                      scope="col"
+                      className="w-max px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                    >
+                      Status
+                    </th>
+                    <th
+                      scope="col"
+                      className="relative py-3.5 pl-3 pr-4 sm:pr-6"
+                    >
+                      <span className="sr-only">Edit</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 bg-white">
+                  {athletes.map((athlete: any) => (
+                    <tr key={athlete.id}>
+                      <td
+                        key={athlete.id}
+                        className="whitespace-nowrap py-5 pl-4 pr-3 text-sm sm:pl-0"
+                      >
+                        <div className="flex items-center">
+                          <div className="h-11 w-11 flex-shrink-0">
+                            <UserCircleIcon className="ml-6 h-11 text-primary" />
+                          </div>
+                          <div className="ml-9">
+                            <p className="font-medium text-gray-900">
+                              {athlete.name} - {athlete.enrollment}
+                            </p>
+                            <p className="text-gray-500">
+                              {Format.phone(athlete.phone)}
+                            </p>
+                            <p className="text-gray-500">{athlete.email}</p>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="whitespace-nowrap px-3 py-5 text-sm text-gray-500">
+                        <p className="text-gray-900">
+                          {Format.document(athlete.document)}
+                        </p>
+
+                        <p className="text-gray-900">{athlete.rg}</p>
+                      </td>
+
+                      <td className="whitespace-nowrap px-3 py-5 text-sm text-gray-500">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleBaseProfile()
+                            setEditItem(athlete)
+                          }}
+                        >
+                          <UserPlusIcon className="h-6 text-cyan" />
+                          <Transition.Root show={openBaseProfile} as={Fragment}>
+                            <Dialog
+                              as="div"
+                              className="relative z-10"
+                              initialFocus={cancelButtonRef}
+                              onClose={setOpenDelete}
+                            >
+                              <Transition.Child
+                                as={Fragment}
+                                enter="ease-out duration-300"
+                                enterFrom="opacity-0"
+                                enterTo="opacity-100"
+                                leave="ease-in duration-200"
+                                leaveFrom="opacity-100"
+                                leaveTo="opacity-0"
+                              >
+                                <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+                              </Transition.Child>
+
+                              <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+                                <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                                  <Transition.Child
+                                    as={Fragment}
+                                    enter="ease-out duration-300"
+                                    enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                                    enterTo="opacity-100 translate-y-0 sm:scale-100"
+                                    leave="ease-in duration-200"
+                                    leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+                                    leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                                  >
+                                    <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                                      <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                                        <div className="flex flex-col items-start">
+                                          <div className="flex w-full items-center gap-2.5 border-b border-zinc-400 pb-3">
+                                            <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border border-teal-300 bg-teal-50 bg-opacity-85 sm:mx-0 sm:h-10 sm:w-10">
+                                              <ClipboardDocumentListIcon
+                                                className="h-6 text-cyan"
+                                                aria-hidden="true"
+                                                strokeWidth={1.5}
+                                              />
+                                            </div>
+                                            <Dialog.Title
+                                              as="h3"
+                                              className="text-lg font-medium"
+                                            >
+                                              Perfil básico:
+                                            </Dialog.Title>
+                                          </div>
+
+                                          <form
+                                            id="base-profile-form"
+                                            className="mt-3 w-full"
+                                            onSubmit={handleEditBaseProfile}
+                                          >
+                                            <Input
+                                              type="text"
+                                              defaultValue={
+                                                athlete.age !== undefined
+                                                  ? athlete?.age
+                                                  : ''
+                                              }
+                                              label="Idade:"
+                                              className="mb-2"
+                                              error={
+                                                baseProfileErrors.age?.message
+                                              }
+                                              {...baseProfileRegister('age')}
+                                            />
+
+                                            <Input
+                                              type="date"
+                                              defaultValue={
+                                                athlete.birthdate !== undefined
+                                                  ? Format.dayString(
+                                                      athlete.birthdate.toLocaleString(),
+                                                    )
+                                                  : ''
+                                              }
+                                              label="Aniversário:"
+                                              className="mb-2"
+                                              error={
+                                                baseProfileErrors.birthdate
+                                                  ?.message
+                                              }
+                                              {...baseProfileRegister(
+                                                'birthdate',
+                                              )}
+                                            />
+
+                                            <Input
+                                              type="text"
+                                              defaultValue={
+                                                athlete.height !== undefined
+                                                  ? athlete.height.toString()
+                                                  : ''
+                                              }
+                                              label="Altura:"
+                                              className="mb-2"
+                                              error={
+                                                baseProfileErrors.height
+                                                  ?.message
+                                              }
+                                              {...baseProfileRegister('height')}
+                                            />
+
+                                            <Input
+                                              type="text"
+                                              defaultValue={
+                                                athlete.weight !== undefined
+                                                  ? athlete.weight.toString()
+                                                  : ''
+                                              }
+                                              label="Peso:"
+                                              className="mb-2"
+                                              error={
+                                                baseProfileErrors.weight
+                                                  ?.message
+                                              }
+                                              {...baseProfileRegister('weight')}
+                                            />
+
+                                            <InputCheckbox
+                                              name="genre"
+                                              label="Sexo:"
+                                              control={control}
+                                              options={[
+                                                {
+                                                  label: 'Masculino',
+                                                  value: 'male',
+                                                },
+                                                {
+                                                  label: 'Feminino',
+                                                  value: 'female',
+                                                },
+                                                {
+                                                  label: 'Outro',
+                                                  value: 'other',
+                                                },
+                                              ]}
+                                            />
+
+                                            <InputCheckbox
+                                              name="healthConditions"
+                                              label="Está em boas condições de saúde?"
+                                              control={control}
+                                              options={[
+                                                { label: 'Sim', value: 'yes' },
+                                                { label: 'Não', value: 'no' },
+                                              ]}
+                                            />
+
+                                            <InputCheckbox
+                                              name="vaccinated"
+                                              label="Vacinado contra a COVID-19:"
+                                              control={control}
+                                              options={[
+                                                { label: 'Sim', value: 'yes' },
+                                                { label: 'Não', value: 'no' },
+                                              ]}
+                                            />
+                                          </form>
+                                        </div>
+                                      </div>
+                                      <div className="gap-3 bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                                        <SimpleButton
+                                          type="submit"
+                                          form="base-profile-form"
+                                          onClick={() =>
+                                            handleEditBaseProfile()
+                                          }
+                                          className="mt-3 inline-flex w-full justify-center rounded-md bg-yellow-500 px-4 py-2 text-sm  font-semibold text-white shadow-sm ring-1 ring-inset ring-yellow-500 hover:bg-yellow-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-yellow-500 sm:mt-0 sm:w-auto"
+                                          isLoading={loading}
+                                        >
+                                          Editar
+                                        </SimpleButton>
+
+                                        <button
+                                          type="button"
+                                          className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                                          onClick={() => handleBaseProfile()}
+                                          ref={cancelButtonRef}
+                                        >
+                                          Fechar
+                                        </button>
+                                      </div>
+                                    </Dialog.Panel>
+                                  </Transition.Child>
+                                </div>
+                              </div>
+                            </Dialog>
+                          </Transition.Root>
+                        </button>
+                      </td>
+
+                      <td className="whitespace-nowrap px-3 py-5 text-sm text-gray-500">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleSchoolProfile()
+                            setEditItem(athlete)
+                          }}
+                        >
+                          <AcademicCapIcon className="h-6 text-cyan" />
+                          <Transition.Root
+                            show={openSchoolProfile}
+                            as={Fragment}
+                          >
+                            <Dialog
+                              as="div"
+                              className="relative z-10"
+                              initialFocus={cancelButtonRef}
+                              onClose={setOpenDelete}
+                            >
+                              <Transition.Child
+                                as={Fragment}
+                                enter="ease-out duration-300"
+                                enterFrom="opacity-0"
+                                enterTo="opacity-100"
+                                leave="ease-in duration-200"
+                                leaveFrom="opacity-100"
+                                leaveTo="opacity-0"
+                              >
+                                <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+                              </Transition.Child>
+
+                              <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+                                <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                                  <Transition.Child
+                                    as={Fragment}
+                                    enter="ease-out duration-300"
+                                    enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                                    enterTo="opacity-100 translate-y-0 sm:scale-100"
+                                    leave="ease-in duration-200"
+                                    leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+                                    leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                                  >
+                                    <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                                      <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                                        <div className="flex flex-col items-start">
+                                          <div className="flex w-full items-center gap-2.5 border-b border-zinc-400 pb-3">
+                                            <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border border-teal-300 bg-teal-50 bg-opacity-85 sm:mx-0 sm:h-10 sm:w-10">
+                                              <ClipboardDocumentListIcon
+                                                className="h-6 text-cyan"
+                                                aria-hidden="true"
+                                                strokeWidth={1.5}
+                                              />
+                                            </div>
+                                            <Dialog.Title
+                                              as="h3"
+                                              className="text-lg font-medium"
+                                            >
+                                              Perfil escolar:
+                                            </Dialog.Title>
+                                          </div>
+
+                                          <form
+                                            id="school-profile-form"
+                                            className="mt-3 w-full"
+                                            onSubmit={handleEditSchoolProfile}
+                                          >
+                                            <Controller
+                                              control={schoolProfileControl}
+                                              name="school"
+                                              defaultValue={
+                                                athlete.school !== null
+                                                  ? athlete.school
+                                                  : ''
+                                              }
+                                              render={({
+                                                field: { onChange, value },
+                                              }) => (
+                                                <Select
+                                                  placeholder="Escola:"
+                                                  className=""
+                                                  error={
+                                                    schoolProfileErrors.school
+                                                      ?.message
+                                                  }
+                                                  onChange={onChange}
+                                                  value={value}
+                                                  options={schoolsOptions}
+                                                />
+                                              )}
+                                            />
+
+                                            <div className="my-1.5 h-px" />
+
+                                            <div
+                                              className={cn(
+                                                disabledSelect &&
+                                                  'pointer-events-none',
+                                              )}
+                                            >
+                                              <Controller
+                                                control={schoolProfileControl}
+                                                name="grade_level"
+                                                defaultValue={
+                                                  athlete.grade_level !== null
+                                                    ? athlete.grade_level
+                                                    : ''
+                                                }
+                                                disabled={disabledSelect}
+                                                render={({
+                                                  field: { onChange, value },
+                                                }) => (
+                                                  <Select
+                                                    placeholder="Série:"
+                                                    error={
+                                                      schoolProfileErrors
+                                                        .grade_level?.message
+                                                    }
+                                                    onChange={onChange}
+                                                    className={cn(
+                                                      disabledSelect &&
+                                                        'pointer-events-none',
+                                                    )}
+                                                    value={
+                                                      isStudent ===
+                                                      'NAO_SOU_ALUNO'
+                                                        ? ''
+                                                        : value
+                                                    }
+                                                    options={gradeLevelOptions}
+                                                  />
+                                                )}
+                                              />
+
+                                              {isStudent ===
+                                                'NAO_SOU_ALUNO' && (
+                                                <p className="pointer-events-none mx-auto mt-1 flex items-start gap-1.5 text-sm text-zinc-700">
+                                                  <InformationCircleIcon className="mt-0.5 h-4" />
+                                                  <span>
+                                                    Apenas para alunos!
+                                                  </span>
+                                                </p>
+                                              )}
+
+                                              <div className="my-1.5 h-px" />
+                                            </div>
+
+                                            <div
+                                              className={cn(
+                                                disabledSelect &&
+                                                  'pointer-events-none',
+                                              )}
+                                            >
+                                              <Controller
+                                                control={schoolProfileControl}
+                                                name="period"
+                                                defaultValue={
+                                                  athlete.period !== null
+                                                    ? athlete.period
+                                                    : ''
+                                                }
+                                                disabled={disabledSelect}
+                                                render={({
+                                                  field: { onChange, value },
+                                                }) => (
+                                                  <Select
+                                                    placeholder="Periódo:"
+                                                    error={
+                                                      schoolProfileErrors
+                                                        .grade_level?.message
+                                                    }
+                                                    onChange={onChange}
+                                                    className={cn(
+                                                      disabledSelect &&
+                                                        'pointer-events-none',
+                                                    )}
+                                                    value={
+                                                      isStudent ===
+                                                      'NAO_SOU_ALUNO'
+                                                        ? ''
+                                                        : value
+                                                    }
+                                                    options={periodOptions}
+                                                  />
+                                                )}
+                                              />
+
+                                              {isStudent ===
+                                                'NAO_SOU_ALUNO' && (
+                                                <p className="pointer-events-none mx-auto mt-1 flex items-start gap-1.5 text-sm text-zinc-700">
+                                                  <InformationCircleIcon className="mt-0.5 h-4" />
+                                                  <span>
+                                                    Apenas para alunos!
+                                                  </span>
+                                                </p>
+                                              )}
+
+                                              <div className="my-1.5 h-px" />
+                                            </div>
+
+                                            <Input
+                                              type="text"
+                                              defaultValue={
+                                                athlete.responsible_name !==
+                                                null
+                                                  ? athlete.responsible_name
+                                                  : ''
+                                              }
+                                              label="Nome do responsável:"
+                                              className="mb-2"
+                                              error={
+                                                schoolProfileErrors
+                                                  .responsible_name?.message
+                                              }
+                                              {...schoolProfileRegister(
+                                                'responsible_name',
+                                              )}
+                                            />
+
+                                            <Input
+                                              type="email"
+                                              defaultValue={
+                                                athlete.responsible_email !==
+                                                null
+                                                  ? athlete.responsible_email
+                                                  : ''
+                                              }
+                                              label="E-mail do responsável:"
+                                              className="mb-2"
+                                              placeholder="Digite o e-mail do responsável..."
+                                              error={
+                                                schoolProfileErrors
+                                                  .responsible_email?.message
+                                              }
+                                              {...schoolProfileRegister(
+                                                'responsible_email',
+                                              )}
+                                            />
+
+                                            <InputPhone
+                                              id="responsible-phone-2"
+                                              type="tel"
+                                              defaultValue={
+                                                athlete.responsible_phone !==
+                                                null
+                                                  ? Format.phone(
+                                                      athlete.responsible_phone,
+                                                    )
+                                                  : ''
+                                              }
+                                              label="Telefone do responsável:"
+                                              className="mb-2"
+                                              error={
+                                                schoolProfileErrors
+                                                  .responsible_phone?.message
+                                              }
+                                              {...schoolProfileRegister(
+                                                'responsible_phone',
+                                              )}
+                                            />
+
+                                            <div className="mb-2 flex gap-3">
+                                              <div className="w-[55%] flex-1">
+                                                <Input
+                                                  label="CPF do responsável"
+                                                  defaultValue={
+                                                    athlete.responsible_document !==
+                                                    null
+                                                      ? Format.document(
+                                                          athlete.responsible_document,
+                                                        )
+                                                      : ''
+                                                  }
+                                                  maxLength={14}
+                                                  className="placeholder-gray-400"
+                                                  error={
+                                                    schoolProfileErrors
+                                                      .responsible_document
+                                                      ?.message
+                                                  }
+                                                  {...schoolProfileRegister(
+                                                    'responsible_document',
+                                                  )}
+                                                />
+                                              </div>
+
+                                              <div className="w-[40%]">
+                                                <Input
+                                                  type="text"
+                                                  label="RG do responsável:"
+                                                  defaultValue={
+                                                    athlete.responsible_rg !==
+                                                    null
+                                                      ? athlete.responsible_rg
+                                                      : ''
+                                                  }
+                                                  error={
+                                                    schoolProfileErrors
+                                                      .responsible_rg?.message
+                                                  }
+                                                  {...schoolProfileRegister(
+                                                    'responsible_rg',
+                                                  )}
+                                                />
+                                              </div>
+                                            </div>
+
+                                            <Input
+                                              type="text"
+                                              defaultValue={
+                                                athlete.classroom_frequency !==
+                                                null
+                                                  ? athlete.classroom_frequency
+                                                  : ''
+                                              }
+                                              label="Frequência em sala de aula:"
+                                              className="mb-2"
+                                              error={
+                                                schoolProfileErrors
+                                                  .classroom_frequency?.message
+                                              }
+                                              {...schoolProfileRegister(
+                                                'classroom_frequency',
+                                              )}
+                                            />
+
+                                            <InputCheckbox
+                                              name="imageRelease"
+                                              label="Autoriza o uso da imagem do atleta?"
+                                              control={control}
+                                              options={[
+                                                { label: 'Sim', value: 'yes' },
+                                                { label: 'Não', value: 'no' },
+                                              ]}
+                                            />
+                                          </form>
+                                        </div>
+                                      </div>
+                                      <div className="gap-3 bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                                        <SimpleButton
+                                          type="submit"
+                                          form="school-profile-form"
+                                          onClick={() =>
+                                            handleEditSchoolProfile()
+                                          }
+                                          className="mt-3 inline-flex w-full justify-center rounded-md bg-yellow-500 px-4 py-2 text-sm  font-semibold text-white shadow-sm ring-1 ring-inset ring-yellow-500 hover:bg-yellow-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-yellow-500 sm:mt-0 sm:w-auto"
+                                          isLoading={loading}
+                                        >
+                                          Editar
+                                        </SimpleButton>
+
+                                        <button
+                                          type="button"
+                                          className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                                          onClick={() => handleSchoolProfile()}
+                                          ref={cancelButtonRef}
+                                        >
+                                          Fechar
+                                        </button>
+                                      </div>
+                                    </Dialog.Panel>
+                                  </Transition.Child>
+                                </div>
+                              </div>
+                            </Dialog>
+                          </Transition.Root>
+                        </button>
+                      </td>
+
+                      <td className="whitespace-nowrap px-3 py-5 text-sm text-gray-500">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handlePersonalProfile()
+                            setEditItem(athlete)
+                          }}
+                        >
+                          <DocumentTextIcon className="h-6 text-cyan" />
+                          <Transition.Root
+                            show={openPersonalProfile}
+                            as={Fragment}
+                          >
+                            <Dialog
+                              as="div"
+                              className="relative z-10"
+                              initialFocus={cancelButtonRef}
+                              onClose={setOpenDelete}
+                            >
+                              <Transition.Child
+                                as={Fragment}
+                                enter="ease-out duration-300"
+                                enterFrom="opacity-0"
+                                enterTo="opacity-100"
+                                leave="ease-in duration-200"
+                                leaveFrom="opacity-100"
+                                leaveTo="opacity-0"
+                              >
+                                <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+                              </Transition.Child>
+
+                              <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+                                <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                                  <Transition.Child
+                                    as={Fragment}
+                                    enter="ease-out duration-300"
+                                    enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                                    enterTo="opacity-100 translate-y-0 sm:scale-100"
+                                    leave="ease-in duration-200"
+                                    leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+                                    leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                                  >
+                                    <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                                      <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                                        <div className="flex flex-col items-start">
+                                          <div className="flex w-full items-center gap-2.5 border-b border-zinc-400 pb-3">
+                                            <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border border-teal-300 bg-teal-50 bg-opacity-85 sm:mx-0 sm:h-10 sm:w-10">
+                                              <ClipboardDocumentListIcon
+                                                className="h-6 text-cyan"
+                                                aria-hidden="true"
+                                                strokeWidth={1.5}
+                                              />
+                                            </div>
+                                            <Dialog.Title
+                                              as="h3"
+                                              className="text-lg font-medium"
+                                            >
+                                              Dados pessoais:
+                                            </Dialog.Title>
+                                          </div>
+
+                                          <form
+                                            id="personal-profile-form"
+                                            className="mt-3 w-full"
+                                            onSubmit={handleEditPersonalProfile}
+                                          >
+                                            <Controller
+                                              control={personalProfileControl}
+                                              name="desired_modality"
+                                              defaultValue={
+                                                athlete.desired_modalities !==
+                                                null
+                                                  ? athlete.desired_modalities
+                                                  : ''
+                                              }
+                                              render={({
+                                                field: { onChange, value },
+                                              }) => (
+                                                <Select
+                                                  placeholder="Categoria:"
+                                                  className=""
+                                                  error={
+                                                    personalProfileErrors
+                                                      .desired_modality?.message
+                                                  }
+                                                  onChange={onChange}
+                                                  value={value}
+                                                  options={sportsOptions}
+                                                />
+                                              )}
+                                            />
+
+                                            <div className="my-3" />
+
+                                            {/* <Controller
+                                              control={personalProfileControl}
+                                              name="coach_id"
+                                              defaultValue={
+                                                athlete.desired_modalities !==
+                                                null
+                                                  ? athlete.
+                                                  : ''
+                                              }
+                                              render={({
+                                                field: { onChange, value },
+                                              }) => (
+                                                <Select
+                                                  placeholder="Categoria:"
+                                                  className=""
+                                                  error={
+                                                    personalProfileErrors
+                                                      .desired_modality?.message
+                                                  }
+                                                  onChange={onChange}
+                                                  value={value}
+                                                  options={sportsOptions}
+                                                />
+                                              )}
+                                            /> */}
+
+                                            <div className="my-3" />
+
+                                            <Controller
+                                              control={personalProfileControl}
+                                              name="responsible_relationship"
+                                              defaultValue={
+                                                athlete.responsible_relationship !==
+                                                null
+                                                  ? athlete.responsible_relationship
+                                                  : ''
+                                              }
+                                              render={({
+                                                field: { onChange, value },
+                                              }) => (
+                                                <Select
+                                                  placeholder="Relação com o responsável:"
+                                                  error={
+                                                    personalProfileErrors
+                                                      .responsible_relationship
+                                                      ?.message
+                                                  }
+                                                  onChange={onChange}
+                                                  value={value}
+                                                  options={
+                                                    responsibleRelationshipOptions
+                                                  }
+                                                />
+                                              )}
+                                            />
+
+                                            <div className="my-3" />
+
+                                            <Controller
+                                              control={personalProfileControl}
+                                              name="shirt_size"
+                                              defaultValue={
+                                                athlete.shirt_size !== null
+                                                  ? athlete.shirt_size
+                                                  : ''
+                                              }
+                                              render={({
+                                                field: { onChange, value },
+                                              }) => (
+                                                <Select
+                                                  error={
+                                                    personalProfileErrors
+                                                      .shirt_size?.message
+                                                  }
+                                                  onChange={onChange}
+                                                  placeholder="Tamanho da camisa:"
+                                                  value={value}
+                                                  options={
+                                                    shirtsAndShortsOptions
+                                                  }
+                                                />
+                                              )}
+                                            />
+
+                                            <div className="my-3" />
+
+                                            <Controller
+                                              control={personalProfileControl}
+                                              name="short_size"
+                                              defaultValue={
+                                                athlete.short_size !== null
+                                                  ? athlete.short_size
+                                                  : ''
+                                              }
+                                              render={({
+                                                field: { onChange, value },
+                                              }) => (
+                                                <Select
+                                                  error={
+                                                    personalProfileErrors
+                                                      .short_size?.message
+                                                  }
+                                                  onChange={onChange}
+                                                  placeholder="Tamanho do short:"
+                                                  className="mb-2"
+                                                  value={value}
+                                                  options={
+                                                    shirtsAndShortsOptions
+                                                  }
+                                                />
+                                              )}
+                                            />
+
+                                            <Input
+                                              type="text"
+                                              label="Bairro:"
+                                              defaultValue={
+                                                athlete.neighborhood !== null
+                                                  ? athlete.neighborhood
+                                                  : ''
+                                              }
+                                              className="mb-2"
+                                              error={
+                                                personalProfileErrors
+                                                  .neighborhood?.message
+                                              }
+                                              {...personalProfileRegister(
+                                                'neighborhood',
+                                              )}
+                                            />
+
+                                            <Input
+                                              type="text"
+                                              label="Rua:"
+                                              defaultValue={
+                                                athlete.street !== null
+                                                  ? athlete.street
+                                                  : ''
+                                              }
+                                              className="mb-2"
+                                              error={
+                                                personalProfileErrors.street
+                                                  ?.message
+                                              }
+                                              {...personalProfileRegister(
+                                                'street',
+                                              )}
+                                            />
+
+                                            <div className="flex gap-3">
+                                              <div className="w-[30%]">
+                                                <Input
+                                                  type="text"
+                                                  label="Número:"
+                                                  defaultValue={
+                                                    athlete.number !== null
+                                                      ? athlete.number
+                                                      : ''
+                                                  }
+                                                  className="mb-2"
+                                                  error={
+                                                    personalProfileErrors.number
+                                                      ?.message
+                                                  }
+                                                  {...personalProfileRegister(
+                                                    'number',
+                                                  )}
+                                                />
+                                              </div>
+
+                                              <div className="flex-1">
+                                                <Input
+                                                  type="text"
+                                                  label="Complemento:"
+                                                  defaultValue={
+                                                    athlete.complement !== null
+                                                      ? athlete.complement
+                                                      : 'Não informado'
+                                                  }
+                                                  className="mb-2"
+                                                  error={
+                                                    personalProfileErrors
+                                                      .complement?.message
+                                                  }
+                                                  {...personalProfileRegister(
+                                                    'complement',
+                                                  )}
+                                                />
+                                              </div>
+                                            </div>
+                                          </form>
+                                        </div>
+                                      </div>
+                                      <div className="gap-3 bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                                        <SimpleButton
+                                          type="submit"
+                                          form="personal-profile-form"
+                                          onClick={() =>
+                                            handleEditPersonalProfile()
+                                          }
+                                          className="mt-3 inline-flex w-full justify-center rounded-md bg-yellow-500 px-4 py-2 text-sm  font-semibold text-white shadow-sm ring-1 ring-inset ring-yellow-500 hover:bg-yellow-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-yellow-500 sm:mt-0 sm:w-auto"
+                                          isLoading={loading}
+                                        >
+                                          Editar
+                                        </SimpleButton>
+
+                                        <button
+                                          type="button"
+                                          className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                                          onClick={() =>
+                                            handlePersonalProfile()
+                                          }
+                                          ref={cancelButtonRef}
+                                        >
+                                          Fechar
+                                        </button>
+                                      </div>
+                                    </Dialog.Panel>
+                                  </Transition.Child>
+                                </div>
+                              </div>
+                            </Dialog>
+                          </Transition.Root>
+                        </button>
+                      </td>
+
+                      <td className="whitespace-nowrap px-3 py-5 text-sm text-gray-500">
+                        <span
+                          className={cn(
+                            'inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset',
+                            athlete.active
+                              ? 'bg-green-50 text-green-700 ring-green-600/20'
+                              : 'bg-red-50 text-red-700 ring-red-600/20',
+                          )}
+                        >
+                          {athlete.active ? 'Ativo' : 'Inativo'}
+                        </span>
+                      </td>
+
+                      {(user?.role === 'SECRETARY' ||
+                        user?.role === 'DIRECTOR') && (
+                        <td className="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                          <div className="flex h-full items-center justify-end">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenEdit(true)
+                                setEditItem(athlete)
+                              }}
+                            >
+                              <PencilIcon className="ml-6 w-6 cursor-pointer text-primary" />
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenDelete(true)
+                                setDeleteItem(athlete)
+                              }}
+                            >
+                              <TrashIcon className="ml-6 w-6 cursor-pointer text-red-500" />
+                            </button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Edit: */}
+      <Transition.Root show={openEdit} as={Fragment}>
+        <Dialog
+          as="div"
+          className="relative z-10"
+          initialFocus={cancelButtonRef}
+          onClose={setOpenEdit}
+        >
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                enterTo="opacity-100 translate-y-0 sm:scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+                leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+              >
+                <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+                  <div>
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100">
+                      <UserIcon
+                        className="h-6 w-6 text-yellow-500"
+                        aria-hidden="true"
+                      />
+                    </div>
+
+                    <div className="mt-3 text-center sm:mt-5">
+                      <Dialog.Title
+                        as="h3"
+                        className="text-base font-semibold leading-6 text-gray-900"
+                      >
+                        Editar atleta
+                      </Dialog.Title>
+
+                      <form
+                        id="edit-athlete-form"
+                        onSubmit={handleEdit}
+                        className="mt-2 space-y-3 pb-4 text-left"
+                      >
+                        <Input
+                          type="text"
+                          defaultValue={
+                            editItem.name !== undefined ? editItem?.name : ''
+                          }
+                          label="Nome:"
+                          placeholder="Digite o nome do atleta..."
+                          error={editErrors.name?.message}
+                          {...editRegister('name')}
+                        />
+
+                        <Input
+                          type="text"
+                          defaultValue={
+                            editItem.email !== undefined ? editItem?.email : ''
+                          }
+                          label="E-mail:"
+                          placeholder="Digite o e-mail."
+                          error={editErrors.email?.message}
+                          {...editRegister('email')}
+                        />
+
+                        <InputPhone
+                          id="phone"
+                          type="tel"
+                          defaultValue={
+                            editItem.phone !== undefined
+                              ? Format.phone(editItem?.phone)
+                              : ''
+                          }
+                          label="Telefone:"
+                          placeholder="Digite o telefone..."
+                          error={editErrors.phone?.message}
+                          {...editRegister('phone')}
+                        />
+
+                        <Input
+                          type="text"
+                          defaultValue={
+                            editItem.document !== undefined
+                              ? Format.document(editItem?.document)
+                              : ''
+                          }
+                          label="CPF:"
+                          maxLength={14}
+                          placeholder="Digite o e-mail."
+                          error={editErrors.document?.message}
+                          {...editRegister('document')}
+                        />
+
+                        <Input
+                          type="text"
+                          defaultValue={
+                            editItem.rg !== undefined ? editItem?.rg : ''
+                          }
+                          label="RG:"
+                          maxLength={14}
+                          placeholder="Digite o RG."
+                          error={editErrors.rg?.message}
+                          {...editRegister('rg')}
+                        />
+
+                        <InputCheckbox
+                          name="active"
+                          label="Aceitar uso de espaço:"
+                          control={control}
+                          options={[
+                            { label: 'Sim', value: 'yes' },
+                            { label: 'Não', value: 'no' },
+                          ]}
+                        />
+                      </form>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+                    <SimpleButton
+                      type="submit"
+                      form="edit-athlete-form"
+                      onClick={() => handleEdit()}
+                      className="inline-flex w-full justify-center rounded-md bg-yellow-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-yellow-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-yellow-500 sm:col-start-2"
+                      isLoading={loading}
+                    >
+                      Editar
+                    </SimpleButton>
+
+                    <button
+                      type="button"
+                      className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:col-start-1 sm:mt-0"
+                      onClick={() => setOpenEdit(false)}
+                      ref={cancelButtonRef}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition.Root>
+
+      {/* Delete: */}
+      <Transition.Root show={openDelete} as={Fragment}>
+        <Dialog
+          as="div"
+          className="relative z-10"
+          initialFocus={cancelButtonRef}
+          onClose={setOpenDelete}
+        >
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                enterTo="opacity-100 translate-y-0 sm:scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+                leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+              >
+                <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                  <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                    <div className="sm:flex sm:items-start">
+                      <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                        <ExclamationTriangleIcon
+                          className="h-6 w-6 text-red-600"
+                          aria-hidden="true"
+                        />
+                      </div>
+                      <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                        <Dialog.Title
+                          as="h3"
+                          className="text-base font-semibold leading-6 text-gray-900"
+                        >
+                          Remover atleta
+                        </Dialog.Title>
+                        <div className="mt-2">
+                          <p className="text-sm text-gray-500">
+                            Você está prestes a excluir o atleta. Todos os seus
+                            dados serão removidos permanentemente. Esta ação não
+                            pode ser desfeita. Deseja prosseguir?
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                    <SimpleButton
+                      type="button"
+                      className="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto"
+                      isLoading={loading}
+                      onClick={() => handleSubmitDelete(deleteItem?.id)}
+                    >
+                      Remover
+                    </SimpleButton>
+
+                    <button
+                      type="button"
+                      className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+                      onClick={() => {
+                        setOpenDelete(false)
+                      }}
+                      ref={cancelButtonRef}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition.Root>
+    </div>
+  )
+}
